@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Шаг 1: Выгрузка репозитория
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Шаг 2: Установка Python
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    # Шаг 3: Установка зависимостей
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+
+    # Шаг 4: Запуск тестов с генерацией HTML-отчёта
+    - name: Run tests and generate report
+      run: |
+        pytest --html=report.html --self-contained-html
+
+    # Шаг 5: Сохранение HTML отчёта как артефакт
+    - name: Upload report
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-report
+        path: report.html
+
+  upload_code:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    # Шаг 1: Выгрузка репозитория при успешном прохождении тестов
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Шаг 2: Выгрузка кода как артефакт
+    - name: Upload code as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: source-code
+        path: .
